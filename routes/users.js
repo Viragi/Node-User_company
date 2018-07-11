@@ -27,13 +27,13 @@ router.post('', async function(req, res, next) {
   try {
     const hashedpassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
-      'insert into users (first_name,last_name,email,photo,current_company_id,username,password ) values ($1,$2,$3,$4,$5,$6,$7) returning*',
+      'insert into users (first_name,last_name,email,photo,current_company,username,password ) values ($1,$2,$3,$4,$5,$6,$7) returning*',
       [
         req.body.first_name,
         req.body.last_name,
         req.body.email,
         req.body.photo,
-        req.body.company_id,
+        req.body.current_company,
         req.body.username,
         hashedpassword
       ]
@@ -44,15 +44,16 @@ router.post('', async function(req, res, next) {
   }
 });
 
-router.get('/:id', userauthentication, async function(req, res, next) {
+router.get('/:username', userauthentication, async function(req, res, next) {
   try {
-    const user_data = await db.query('select * from users where id=$1', [
-      req.params.id
+    const user_data = await db.query('select * from users where username=$1', [
+      req.params.username
     ]);
-    const data1 = await db.query('select * from jobs_users where user_id=$1', [
-      req.params.id
-    ]);
-    var jobs = data1.rows.map(item => item.job_id);
+    const user_jobs = await db.query(
+      'select * from jobs_users where user_id=$1',
+      [user_data.id]
+    );
+    var jobs = user_jobs.rows.map(item => item.job_id);
     user_data.rows[0].applied_to = jobs;
     return res.json(user_data.rows[0]);
   } catch (err) {

@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-
+const pg = require('pg');
 const usersRoutes = require('./routes/users');
 const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
