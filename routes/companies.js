@@ -7,6 +7,8 @@ const {
   userauthentication,
   companyauthentication
 } = require('../middleware/auth');
+const { validate } = require('jsonschema');
+const companiesSchema = require('../validation_schema/companySchema');
 
 router.get('', userauthentication, async function(req, res, next) {
   try {
@@ -17,15 +19,14 @@ router.get('', userauthentication, async function(req, res, next) {
   }
 });
 
-router.get('/:id', userauthentication, async function(req, res, next) {
+router.get('/:handle', userauthentication, async function(req, res, next) {
   try {
-    const data = await db.query('select * from companies where id=$1', [
-      req.params.id
+    const data = await db.query('select * from companies where handle=$1', [
+      req.params.handle
     ]);
-    const company_jobs = await db.query(
-      'select id from jobs where company_id=$1',
-      [req.params.id]
-    );
+    const company_jobs = await db.query('select id from jobs where id=$1', [
+      data.id
+    ]);
     data.rows[0].jobs = company_jobs.rows.map(function(item) {
       return item.id;
     });
@@ -37,6 +38,11 @@ router.get('/:id', userauthentication, async function(req, res, next) {
 
 router.post('', async function(req, res, next) {
   try {
+    const result = validate(req.body, companiesSchema);
+    if (!result.valid) {
+      // pass the validation errors to the error handler
+      return next(result.errors.map(e => e.stack));
+    }
     const hashedpassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
       'insert into companies (name,logo,handle,password) values ($1,$2,$3,$4) returning*',
@@ -48,14 +54,14 @@ router.post('', async function(req, res, next) {
   }
 });
 
-router.patch('/:id', companyauthentication, async function(req, res, next) {
+router.patch('/:handle', companyauthentication, async function(req, res, next) {
   try {
     const data = await db.query(
-      'update companies set name=$1, logo=$2 ,handle=$4 , password = $5 where id=$3 returning*',
+      'update companies set name=$1, logo=$2 ,handle=$4 , password = $5 where handle=$3 returning*',
       [
         req.body.name,
         req.body.logo,
-        req.params.id,
+        req.params.handle,
         req.body.handle,
         req.body.password
       ]
@@ -66,11 +72,11 @@ router.patch('/:id', companyauthentication, async function(req, res, next) {
   }
 });
 
-router.delete('/:id', async function(req, res, next) {
+router.delete('/:handle', async function(req, res, next) {
   try {
     const data = await db.query(
-      'delete from companies  where id=$1 returning*',
-      [req.params.id]
+      'delete from companies  where handle=$1 returning*',
+      [req.params.handle]
     );
     return res.json({ message: 'deleted' });
   } catch (err) {
@@ -96,7 +102,7 @@ router.post('/auth', async function(req, res, next) {
       return res.json({ message: 'incorrect password' });
     } else {
       const token = jsonwebtoken.sign(
-        { user_id: founduser.rows[0].id },
+        { handle: founduser.rows[0].handle },
         'SECRETKEY'
       );
       return res.json({ token });

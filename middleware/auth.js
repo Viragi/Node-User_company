@@ -13,8 +13,10 @@ function userauthentication(req, res, next) {
 function userauthorization(req, res, next) {
   try {
     const token = req.headers.authorization;
+    console.log(token);
     const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
-    if (decodedtoken.user_id == req.params.id) {
+    console.log(decodedtoken);
+    if (decodedtoken.username == req.params.username) {
       return next();
     } else {
       return res.json({ message: 'unauthorized person' });

@@ -9,6 +9,9 @@ const {
   companyauthentication
 } = require('../middleware/auth');
 
+const { validate } = require('jsonschema');
+const userSchema = require('../validation_schema/userSchema');
+
 router.get('', userauthentication, companyauthentication, async function(
   req,
   res,
@@ -25,6 +28,11 @@ router.get('', userauthentication, companyauthentication, async function(
 
 router.post('', async function(req, res, next) {
   try {
+    const result = validate(req.body, userSchema);
+    if (!result.valid) {
+      // pass the validation errors to the error handler
+      return next(result.errors.map(e => e.stack));
+    }
     const hashedpassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
       'insert into users (first_name,last_name,email,photo,current_company,username,password ) values ($1,$2,$3,$4,$5,$6,$7) returning*',
@@ -60,17 +68,17 @@ router.get('/:username', userauthentication, async function(req, res, next) {
     return next(err);
   }
 });
-router.patch('/:id', userauthorization, async function(req, res, next) {
+router.patch('/:username', userauthorization, async function(req, res, next) {
   try {
     const data = await db.query(
-      'update users set first_name =$1 ,last_name=$2, email=$3 ,photo=$4, current_company_id=$6 , username=$7,password=$8 where id=$5 returning *',
+      'update users set first_name =$1 ,last_name=$2, email=$3 ,photo=$4, current_company=$6 , username=$7,password=$8 where username=$5 returning *',
       [
         req.body.first_name,
         req.body.last_name,
         req.body.email,
         req.body.photo,
-        req.params.id,
-        req.body.current_company_id,
+        req.params.username,
+        req.body.current_company,
         req.body.username,
         req.body.password
       ]
@@ -81,7 +89,7 @@ router.patch('/:id', userauthorization, async function(req, res, next) {
   }
 });
 
-router.delete('/:id', userauthorization, async function(req, res, next) {
+router.delete('/:username', userauthorization, async function(req, res, next) {
   try {
     await db.query('delete from users where id=$1 returning*', [req.params.id]);
     return res.json({ message: 'deleted' });
@@ -91,11 +99,11 @@ router.delete('/:id', userauthorization, async function(req, res, next) {
 });
 
 // users can apply job and delete job
-router.post('/:id/jobs/:job_id', async function(req, res, next) {
+router.post('/:username/jobs/:job_id', async function(req, res, next) {
   try {
     const data = await db.query(
       'insert into jobs_users (job_id,user_id) values ($1,$2) returning*',
-      [req.params.job_id, req.params.id]
+      [req.params.job_id, req.params.username]
     );
     return res.json(data.rows[0]);
   } catch (err) {
@@ -123,7 +131,10 @@ router.post('/auth', async function(req, res, next) {
       return res.json({ message: 'invalid password' });
     } else {
       const token = jsonwebtoken.sign(
-        { user_id: userfound.rows[0].id },
+        {
+          //user_id: userfound.rows[0].id,
+          username: userfound.rows[0].username
+        },
         'SECRETKEY'
       );
       return res.json({ token });
