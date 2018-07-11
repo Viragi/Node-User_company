@@ -15,6 +15,4 @@ app.use('/users', usersRoutes);
 app.use('/companies', companyRoutes);
 app.use('/jobs', jobRoutes);
 
-app.listen(3000, function() {
-  console.log('server starting on port 3000');
-});
+module.exports = app;

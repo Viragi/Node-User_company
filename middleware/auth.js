@@ -15,7 +15,7 @@ function userauthorization(req, res, next) {
     const token = req.headers.authorization;
     const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
     if (decodedtoken.user_id == req.params.id) {
-      return res.json({ message: 'authorized person' });
+      return next();
     } else {
       return res.json({ message: 'unauthorized person' });
     }
@@ -24,4 +24,19 @@ function userauthorization(req, res, next) {
   }
 }
 
-module.exports = { userauthentication, userauthorization };
+function companyauthentication(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
+    req.company_id = decodedtoken.company_id;
+    return next();
+  } catch (err) {
+    return res.json({ message: 'Company unauthorized' });
+  }
+}
+
+module.exports = {
+  userauthentication,
+  userauthorization,
+  companyauthentication
+};

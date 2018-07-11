@@ -1,8 +1,12 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const db = require('../db/index');
+const {
+  userauthentication,
+  companyauthentication
+} = require('../middleware/auth');
 
-router.get('', async function(req, res, next) {
+router.get('', userauthentication, async function(req, res, next) {
   try {
     const data = await db.query('select * from jobs');
     return res.json(data.rows);
@@ -11,7 +15,7 @@ router.get('', async function(req, res, next) {
   }
 });
 
-router.get('/:id', async function(req, res, next) {
+router.get('/:id', userauthentication, async function(req, res, next) {
   try {
     const data = await db.query('select from jobs where id=$1', [
       req.params.id
@@ -22,7 +26,11 @@ router.get('/:id', async function(req, res, next) {
   }
 });
 
-router.post('/:company_id', async function(req, res, next) {
+router.post('/:company_id', companyauthentication, async function(
+  req,
+  res,
+  next
+) {
   try {
     const data = await db.query(
       'insert into jobs (title,salary,equity,company_id) values ($1,$2,$3,$4) returning*',
@@ -34,8 +42,18 @@ router.post('/:company_id', async function(req, res, next) {
   }
 });
 
-router.patch('/:company_id/:id', async function(req, res, next) {
+router.patch('/:company_id/:id', companyauthentication, async function(
+  req,
+  res,
+  next
+) {
   try {
+    const job_company_id = await db.query('SELECT * from jobs WHERE id=$1', [
+      req.params.id
+    ]).rows[0].company_id;
+    if (req.company_id !== job_company_id) {
+      return next({ error: 'You didnt post this job so you cant update it.' });
+    }
     const data = await db.query(
       ' update jobs set title=$1,salary=$2,equity=$3,company_id=$4 where id=$5 returning*',
       [

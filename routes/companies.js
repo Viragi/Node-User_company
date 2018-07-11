@@ -3,8 +3,12 @@ const router = express.Router();
 const db = require('../db/index');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
+const {
+  userauthentication,
+  companyauthentication
+} = require('../middleware/auth');
 
-router.get('', async function(req, res, next) {
+router.get('', userauthentication, async function(req, res, next) {
   try {
     const data = await db.query('select * from companies');
     return res.json(data.rows);
@@ -13,7 +17,7 @@ router.get('', async function(req, res, next) {
   }
 });
 
-router.get('/:id', async function(req, res, next) {
+router.get('/:id', userauthentication, async function(req, res, next) {
   try {
     const data = await db.query('select * from companies where id=$1', [
       req.params.id
@@ -44,11 +48,17 @@ router.post('', async function(req, res, next) {
   }
 });
 
-router.patch('/:id', async function(req, res, next) {
+router.patch('/:id', companyauthentication, async function(req, res, next) {
   try {
     const data = await db.query(
-      'update companies set name=$1, logo=$2 where id=$3 returning*',
-      [req.body.name, req.body.logo, req.params.id]
+      'update companies set name=$1, logo=$2 ,handle=$4 , password = $5 where id=$3 returning*',
+      [
+        req.body.name,
+        req.body.logo,
+        req.params.id,
+        req.body.handle,
+        req.body.password
+      ]
     );
     return res.json(data.rows[0]);
   } catch (err) {
@@ -87,7 +97,7 @@ router.post('/auth', async function(req, res, next) {
     } else {
       const token = jsonwebtoken.sign(
         { user_id: founduser.rows[0].id },
-        'secret'
+        'SECRETKEY'
       );
       return res.json({ token });
     }

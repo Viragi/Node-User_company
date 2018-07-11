@@ -3,9 +3,17 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db/index');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
-const { userauthentication, userauthorization } = require('../middleware/auth');
+const {
+  userauthentication,
+  userauthorization,
+  companyauthentication
+} = require('../middleware/auth');
 
-router.get('', userauthentication, async function(req, res, next) {
+router.get('', userauthentication, companyauthentication, async function(
+  req,
+  res,
+  next
+) {
   try {
     const data = await db.query('select * from users');
 
@@ -54,14 +62,16 @@ router.get('/:id', userauthentication, async function(req, res, next) {
 router.patch('/:id', userauthorization, async function(req, res, next) {
   try {
     const data = await db.query(
-      'update users set first_name =$1 ,last_name=$2, email=$3 ,photo=$4, current_company_id=$5 where id=$5 returning*',
+      'update users set first_name =$1 ,last_name=$2, email=$3 ,photo=$4, current_company_id=$6 , username=$7,password=$8 where id=$5 returning *',
       [
         req.body.first_name,
         req.body.last_name,
         req.body.email,
         req.body.photo,
         req.params.id,
-        req.body.current_company_id
+        req.body.current_company_id,
+        req.body.username,
+        req.body.password
       ]
     );
     return res.json(data.rows[0]);
@@ -70,7 +80,7 @@ router.patch('/:id', userauthorization, async function(req, res, next) {
   }
 });
 
-router.delete('/:id', async function(req, res, next) {
+router.delete('/:id', userauthorization, async function(req, res, next) {
   try {
     await db.query('delete from users where id=$1 returning*', [req.params.id]);
     return res.json({ message: 'deleted' });
