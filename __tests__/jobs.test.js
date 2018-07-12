@@ -20,7 +20,7 @@ beforeAll(async () => {
     `CREATE TABLE jobs (id SERIAL PRIMARY KEY, 
       title TEXT, salary TEXT, 
       equity FLOAT, 
-      company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+      company_handle text NOT NULL REFERENCES companies(handle) ON DELETE CASCADE
       );`
   );
 
@@ -55,7 +55,8 @@ beforeEach(async () => {
       password: 'secret'
     });
   auth.token = response.body.token;
-  auth.current_username = jwt.decode(auth.token).username;
+  console.log('auth_token', auth.token);
+  auth.current_username = jwt.verify(auth.token, 'SECRETKEY').username;
 
   // do the same for company "companies"
   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
@@ -69,29 +70,66 @@ beforeEach(async () => {
       handle: 'testcompany',
       password: 'secret'
     });
+
   auth.company_token = companyResponse.body.token;
-  auth.current_company_handle = jwt.decode(auth.company_token).handle;
+  auth.current_company_handle = jwt.verify(
+    auth.company_token,
+    'SECRETKEY'
+  ).handle;
+
+  // const jobresponse = await request(app)
+  //   .post('/jobs')
+  //   .set('authorization', auth.company_token)
+  //   .send({
+  //     title: 'software engg',
+  //     salary: '100000',
+  //     equity: '12',
+  //     company_handle: companyResponse.handle
+  //   });
 });
 
-describe('GET /users', () => {
-  test('gets a list of 1 user', async () => {
+describe('GET /jobs', () => {
+  test('gets a list of jobs', async () => {
     const response = await request(app)
-      .get('/users')
+      .get('/jobs')
       .set('authorization', auth.token);
-    expect(response.body).toHaveLength(1);
+    expect(response.status).toBe(200);
   });
 });
 
-describe('GET /users/:username', () => {
-  test('gets specs on specified user', async () => {
-    console.log(auth.current_username);
+describe('POST /jobs', () => {
+  test('post jobs related to one company', async () => {
+    //console.log(auth.current_username);
     const response = await request(app)
-      .get(`/users/${auth.current_username}`)
-      .set('authorization', auth.token);
-    //console.log(response.body);
-    expect(response.body.username).toBe(auth.current_username);
+      .post(`/jobs`)
+      .send({
+        title: 'QA',
+        salary: '100000',
+        equity: 12,
+        company_handle: 'testcompany'
+      })
+      .set('authorization', auth.company_token);
+    console.log('response-body', response.body);
+    expect(response.status).toBe(200);
   });
 });
+
+// describe('GET /jobs/:compay_handle', () => {
+//   test('gets specs on specified jobs related to one company', async () => {
+//     //console.log(auth.current_username);
+//     const response = await request(app)
+//       .get(`/jobs/${auth.current_company_handle}`)
+//        .send({
+//         title: 'QA',
+//         salary: '100000',
+//         equity: '12',
+//         company_handle: companyResponse.handle
+//       }
+//       .set('authorization', auth.company_token);
+//     //console.log(response.body);
+//     expect(response.status).toBe(200);
+//   });
+// });
 
 // describe('delete/users/username', function() {
 //   test('sucessfully delete own user', async function() {

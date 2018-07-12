@@ -26,15 +26,16 @@ router.get('/:id', userauthentication, async function(req, res, next) {
   }
 });
 
-router.post('/:company_id', companyauthentication, async function(
-  req,
-  res,
-  next
-) {
+router.post('', companyauthentication, async function(req, res, next) {
   try {
     const data = await db.query(
-      'insert into jobs (title,salary,equity,company_id) values ($1,$2,$3,$4) returning*',
-      [req.body.title, req.body.salary, req.body.equity, req.params.company_id]
+      'insert into jobs (title,salary,equity,company_handle) values ($1,$2,$3,$4) returning*',
+      [
+        req.body.title,
+        req.body.salary,
+        req.body.equity,
+        req.body.company_handle
+      ]
     );
     return res.json(data.rows);
   } catch (err) {

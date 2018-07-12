@@ -73,25 +73,34 @@ beforeEach(async () => {
   auth.current_company_handle = jwt.decode(auth.company_token).handle;
 });
 
-describe('GET /users', () => {
-  test('gets a list of 1 user', async () => {
+describe('GET /companies', () => {
+  test('gets a list of all companies', async () => {
     const response = await request(app)
-      .get('/users')
+      .get('/companies')
       .set('authorization', auth.token);
-    expect(response.body).toHaveLength(1);
+    expect(response.body.handle).toBe(auth.handle);
+  });
+
+  test('gets specs on specified user', async () => {
+    console.log(auth.handle);
+    const response = await request(app)
+      .get(`/companies/${auth.handle}`)
+      .set('authorization', auth.token);
+    //console.log(response.body);
+    expect(response.body.handle).toBe(auth.handle);
   });
 });
 
-describe('GET /users/:username', () => {
-  test('gets specs on specified user', async () => {
-    console.log(auth.current_username);
-    const response = await request(app)
-      .get(`/users/${auth.current_username}`)
-      .set('authorization', auth.token);
-    //console.log(response.body);
-    expect(response.body.username).toBe(auth.current_username);
-  });
-});
+// describe('GET /users/:username', () => {
+//   test('gets specs on specified user', async () => {
+//     console.log(auth.current_username);
+//     const response = await request(app)
+//       .get(`/users/${auth.current_username}`)
+//       .set('authorization', auth.token);
+//     //console.log(response.body);
+//     expect(response.body.username).toBe(auth.current_username);
+// //   });
+// });
 
 // describe('delete/users/username', function() {
 //   test('sucessfully delete own user', async function() {

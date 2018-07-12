@@ -10,7 +10,7 @@ name TEXT, logo TEXT );
 CREATE TABLE jobs (id SERIAL PRIMARY KEY, 
 title TEXT, salary TEXT, 
 equity FLOAT, 
-company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE
+company_handle TEXT NOT NULL REFERENCES companies(handle) ON DELETE CASCADE
 );
 
 CREATE TABLE users (
