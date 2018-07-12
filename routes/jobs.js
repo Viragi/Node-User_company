@@ -3,10 +3,8 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db/index');
 const {
   userauthentication,
-  companyauthentication,
-  userauthorization
+  companyauthentication
 } = require('../middleware/auth');
-
 
 router.get('', userauthentication, async function(req, res, next) {
   try {
@@ -79,13 +77,25 @@ router.delete('/:id', async function(req, res, next) {
   }
 });
 
-router.get('/:id/apply' userauthorization async function(req, res, next){
-try{
-  const applicationData = 
-} catch(err){
-  return next(err);
-}
+router.get('/:id/apply', userauthentication, async function(req, res, next) {
+  try {
+    const jobData = await db.query(
+      'SELECT user_id FROM jobs_users WHERE job_id=$1',
+      [req.params.id]
+    );
+    const userIDS = jobData.rows.map(item => item.user_id);
+    const userNames = userIDS.map(async val => {
+      return await db.query('SELECT * FROM users WHERE id=$1', [val]).rows[0]
+        .username;
+      // console.log(names);
+      // console.log(names.rows[0].username);
+    });
+    console.log(userNames);
+    // console.log(jobData);
+    return res.json(jobData.rows);
+  } catch (err) {
+    return next(err);
+  }
 });
-
 
 module.exports = router;

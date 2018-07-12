@@ -62,7 +62,7 @@ router.get('/:username', userauthentication, async function(req, res, next) {
       [user_data.id]
     );
     var jobs = user_jobs.rows.map(item => item.job_id);
-    user_data.rows[0].applied_to = jobs;
+    // user_data.rows[0].applied_to = jobs;
     return res.json(user_data.rows[0]);
   } catch (err) {
     return next(err);

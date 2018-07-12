@@ -26,8 +26,8 @@ CREATE TABLE users (
 
 CREATE TABLE jobs_users (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-  job_id INTEGER NOT NULL REFERENCES companies (id) ON DELETE CASCADE
+  username TEXT NOT NULL REFERENCES users (username) ON DELETE CASCADE,
+  job_id INTEGER NOT NULL REFERENCES jobs (id) ON DELETE CASCADE
 );
 
 -- psql < schema.sql

@@ -28,7 +28,6 @@ router.get('/:handle', userauthentication, async function(req, res, next) {
       'select id from jobs where company_id=$1',
       [data.rows[0].id]
     );
-    console.log(company_jobs);
     const employees = await db.query(
       'select username from users where current_company=$1',
       [data.rows[0].handle]
