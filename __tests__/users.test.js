@@ -82,22 +82,33 @@ describe('GET /users', () => {
   });
 });
 
-describe('delete/users/username', function() {
-  test('sucessfully delete own user', async function() {
+describe('GET /users/:username', () => {
+  test('gets specs on specified user', async () => {
+    console.log(auth.current_username);
     const response = await request(app)
-      .delete(`/users/${auth.current_username}`)
-      .set(`authorization`, auth.token);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'unauthorized person' });
-  });
-
-  test('cannot delete another user', async function() {
-    const response = await request(app)
-      .delete(`/users/${auth.current_user_id + 1}`)
-      .set(`authorization`, auth.token);
-    expect(response.status).toBe(200);
+      .get(`/users/:${auth.current_username}`)
+      .set('authorization', auth.token);
+    console.log(response.body);
+    expect(response.body).toHaveLength(1);
   });
 });
+
+// describe('delete/users/username', function() {
+//   test('sucessfully delete own user', async function() {
+//     const response = await request(app)
+//       .delete(`/users/${auth.current_username}`)
+//       .set(`authorization`, auth.token);
+//     expect(response.status).toBe(200);
+//     expect(response.body).toEquaqql({ message: 'unauthorized person' });
+//   });
+
+//   test('cannot delete another user', async function() {
+//     const response = await request(app)
+//       .delete(`/users/${auth.current_user_id + 1}`)
+//       .set(`authorization`, auth.token);
+//     expect(response.status).toBe(200);
+//   });
+// });
 
 // describe('patch/companies/:id', function() {
 //   test('sucessfully update own company', async function() {

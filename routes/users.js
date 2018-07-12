@@ -58,8 +58,8 @@ router.get('/:username', userauthentication, async function(req, res, next) {
       req.params.username
     ]);
     const user_jobs = await db.query(
-      'select * from jobs_users where user_id=$1',
-      [user_data.id]
+      'select * from jobs_users where username=$1',
+      [req.params.username]
     );
     var jobs = user_jobs.rows.map(item => item.job_id);
     // user_data.rows[0].applied_to = jobs;
