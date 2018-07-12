@@ -114,7 +114,7 @@ router.post('/:username/jobs/:job_id', async function(req, res, next) {
 //Add a new route /users/auth. This route accepts a POST request with a username and password,
 //and it returns a JWT if the username exists and the password is correct
 
-router.post('/auth', async function(req, res, next) {
+router.post('/user-auth', async function(req, res, next) {
   try {
     const userfound = await db.query(
       'select * from users where username = $1',

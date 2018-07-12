@@ -24,9 +24,18 @@ router.get('/:handle', userauthentication, async function(req, res, next) {
     const data = await db.query('select * from companies where handle=$1', [
       req.params.handle
     ]);
-    const company_jobs = await db.query('select id from jobs where id=$1', [
-      data.id
-    ]);
+    const company_jobs = await db.query(
+      'select id from jobs where company_id=$1',
+      [data.rows[0].id]
+    );
+    console.log(company_jobs);
+    const employees = await db.query(
+      'select username from users where current_company=$1',
+      [data.rows[0].handle]
+    );
+    data.rows[0].employees = employees.rows.map(function(item) {
+      return item.username;
+    });
     data.rows[0].jobs = company_jobs.rows.map(function(item) {
       return item.id;
     });
@@ -85,7 +94,7 @@ router.delete('/:handle', async function(req, res, next) {
 });
 //company login authentication
 
-router.post('/auth', async function(req, res, next) {
+router.post('/company-auth', async function(req, res, next) {
   try {
     const founduser = await db.query(
       'select * from companies where handle=$1',

@@ -49,7 +49,7 @@
     },
     "current_company": {
       "$id": "/properties/current_company",
-      "type": "null",
+      "type": "string",
       "title": "The Current_company Schema ",
       "default": null,
       "examples": [null]

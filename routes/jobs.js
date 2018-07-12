@@ -3,8 +3,10 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db/index');
 const {
   userauthentication,
-  companyauthentication
+  companyauthentication,
+  userauthorization
 } = require('../middleware/auth');
+
 
 router.get('', userauthentication, async function(req, res, next) {
   try {
@@ -42,16 +44,12 @@ router.post('/:company_id', companyauthentication, async function(
   }
 });
 
-router.patch('/:company_id/:id', companyauthentication, async function(
-  req,
-  res,
-  next
-) {
+router.patch('/:id', companyauthentication, async function(req, res, next) {
   try {
     const job_company_id = await db.query('SELECT * from jobs WHERE id=$1', [
       req.params.id
-    ]).rows[0].company_id;
-    if (req.company_id !== job_company_id) {
+    ]);
+    if (req.company_id !== job_company_id.id) {
       return next({ error: 'You didnt post this job so you cant update it.' });
     }
     const data = await db.query(
@@ -60,7 +58,7 @@ router.patch('/:company_id/:id', companyauthentication, async function(
         req.body.title,
         req.body.salary,
         req.body.equity,
-        req.params.company_id,
+        req.body.company_id,
         req.params.id
       ]
     );
@@ -80,4 +78,14 @@ router.delete('/:id', async function(req, res, next) {
     return next(err);
   }
 });
+
+router.get('/:id/apply' userauthorization async function(req, res, next){
+try{
+  const applicationData = 
+} catch(err){
+  return next(err);
+}
+});
+
+
 module.exports = router;
