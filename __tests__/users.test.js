@@ -56,6 +56,7 @@ beforeEach(async () => {
     });
   auth.token = response.body.token;
   auth.current_username = jwt.decode(auth.token).username;
+  console.log(auth.token);
 
   // do the same for company "companies"
   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
@@ -78,6 +79,8 @@ describe('GET /users', () => {
     const response = await request(app)
       .get('/users')
       .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+    console.log(response.body);
     expect(response.body).toHaveLength(1);
   });
 });
@@ -93,36 +96,43 @@ describe('GET /users/:username', () => {
   });
 });
 
-// describe('delete/users/username', function() {
-//   test('sucessfully delete own user', async function() {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_username}`)
-//       .set(`authorization`, auth.token);
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEquaqql({ message: 'unauthorized person' });
-//   });
+describe('delete/users/username', function() {
+  test('sucessfully delete own user', async function() {
+    const response = await request(app)
+      .delete(`/users/${auth.current_username}`)
+      .set(`authorization`, auth.token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'deleted' });
+  });
 
-//   test('cannot delete another user', async function() {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_user_id + 1}`)
-//       .set(`authorization`, auth.token);
-//     expect(response.status).toBe(200);
-//   });
-// });
+  test('cannot delete another user', async function() {
+    const response = await request(app)
+      .delete(`/users/${auth.current_username}`)
+      .set(`authorization`, auth.token + 'dfsf');
+    // expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'token invalid' });
+  });
+});
 
-// describe('patch/companies/:id', function() {
-//   test('sucessfully update own company', async function() {
-//     const response = await request(app)
-//       .patch(`/companies/${auth.current_user_id}`)
-//       .send({
-//         handle: 'testcompany',
-//         password: 'secret',
-//         name: 'hooli'
-//       })
-//       .set(`authorization`, auth.company_token);
-//     expect(response.status).toBe(200);
-//   });
-// });
+describe('patch/users/:username', function() {
+  test('sucessfully update a user', async function() {
+    const response = await request(app)
+      .patch(`/users/${auth.current_username}`)
+      .send({
+        first_name: 'Michael',
+        last_name: 'Hueter',
+        username: 'hueter',
+        email: 'michael@rithmschool.com',
+        password: 'foo123',
+        current_company: null,
+        photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
+      })
+      .set(`authorization`, auth.token);
+    // console.log(response);
+    expect(response.status).toBe(200);
+    expect(response.body.first_name).toEqual('Michael');
+  });
+});
 
 afterEach(async () => {
   // delete the users and company users

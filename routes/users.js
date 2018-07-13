@@ -13,11 +13,7 @@ const { validate } = require('jsonschema');
 const userSchema = require('../validation_schema/userSchema');
 const APIError = require('../APIError');
 
-router.get('', userauthentication, companyauthentication, async function(
-  req,
-  res,
-  next
-) {
+router.get('', userauthentication, async function(req, res, next) {
   try {
     const data = await db.query('select * from users');
 
@@ -97,7 +93,9 @@ router.patch('/:username', userauthorization, async function(req, res, next) {
 
 router.delete('/:username', userauthorization, async function(req, res, next) {
   try {
-    await db.query('delete from users where id=$1 returning*', [req.params.id]);
+    await db.query('delete from users where username=$1 returning*', [
+      req.params.username
+    ]);
     return res.json({ message: 'deleted' });
   } catch (err) {
     return next(err);

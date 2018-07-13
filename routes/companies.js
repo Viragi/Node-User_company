@@ -25,7 +25,7 @@ router.get('/:handle', userauthentication, async function(req, res, next) {
       req.params.handle
     ]);
     const company_jobs = await db.query(
-      'select id from jobs where company_id=$1',
+      'select id from jobs where company_handle=$1',
       [data.rows[0].id]
     );
     const employees = await db.query(
@@ -65,13 +65,13 @@ router.post('', async function(req, res, next) {
 router.patch('/:handle', companyauthentication, async function(req, res, next) {
   try {
     const data = await db.query(
-      'update companies set name=$1, logo=$2 ,handle=$4 , password = $5 where handle=$3 returning*',
+      'update companies set name=$1, logo=$2, password=$3, handle=$4 where handle=$5 returning*',
       [
         req.body.name,
         req.body.logo,
-        req.params.handle,
+        req.body.password,
         req.body.handle,
-        req.body.password
+        req.params.handle
       ]
     );
     return res.json(data.rows[0]);
@@ -80,7 +80,11 @@ router.patch('/:handle', companyauthentication, async function(req, res, next) {
   }
 });
 
-router.delete('/:handle', async function(req, res, next) {
+router.delete('/:handle', companyauthentication, async function(
+  req,
+  res,
+  next
+) {
   try {
     const data = await db.query(
       'delete from companies  where handle=$1 returning*',
@@ -100,7 +104,7 @@ router.post('/company-auth', async function(req, res, next) {
       [req.body.handle]
     );
     if (founduser.rows.length === 0) {
-      return res.json({ message: 'invalidd user name' });
+      return res.json({ message: 'invalid user name' });
     }
     const result = bcrypt.compare(
       req.body.password,
