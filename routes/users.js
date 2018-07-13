@@ -11,6 +11,7 @@ const {
 
 const { validate } = require('jsonschema');
 const userSchema = require('../validation_schema/userSchema');
+const APIError = require('../APIError');
 
 router.get('', userauthentication, companyauthentication, async function(
   req,
@@ -28,10 +29,15 @@ router.get('', userauthentication, companyauthentication, async function(
 
 router.post('', async function(req, res, next) {
   try {
-    const result = validate(req.body, userSchema);
-    if (!result.valid) {
-      // pass the validation errors to the error handler
-      return next(result.errors.map(e => e.stack));
+    const validation = validate(req.body, userSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashedpassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(

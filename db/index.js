@@ -1,10 +1,10 @@
 const { Client } = require('pg');
-let dbName = 'users-companies-jobs-auth-solutions';
+let dbName = 'usercompany_db';
 if (process.env.NODE_ENV == 'test') {
-  dbName = 'users-companies-jobs-auth-solutions-test';
+  dbName = 'usercompany_db-test';
 }
 const client = new Client({
-  connectionString: 'postgressql://localhost/usercompany_db'
+  connectionString: `postgressql://localhost/${dbName}`
 });
 
 client.connect();

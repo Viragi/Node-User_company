@@ -77,16 +77,6 @@ beforeEach(async () => {
     'SECRETKEY'
   ).handle;
 
-  // const jobresponse = await request(app)
-  //   .post('/jobs')
-  //   .set('authorization', auth.company_token)
-  //   .send({
-  //     title: 'software engg',
-  //     salary: '100000',
-  //     equity: '12',
-  //     company_handle: companyResponse.handle
-  //   });
-});
 
 describe('GET /jobs', () => {
   test('gets a list of jobs', async () => {
@@ -114,22 +104,16 @@ describe('POST /jobs', () => {
   });
 });
 
-// describe('GET /jobs/:compay_handle', () => {
-//   test('gets specs on specified jobs related to one company', async () => {
-//     //console.log(auth.current_username);
-//     const response = await request(app)
-//       .get(`/jobs/${auth.current_company_handle}`)
-//        .send({
-//         title: 'QA',
-//         salary: '100000',
-//         equity: '12',
-//         company_handle: companyResponse.handle
-//       }
-//       .set('authorization', auth.company_token);
-//     //console.log(response.body);
-//     expect(response.status).toBe(200);
-//   });
-// });
+describe('jobs/:id/apply', function(){
+  test('list usernames who have applied for this job(id)', async function(){
+    await db.query('INSERT INTO jobs_users (username, job_id) VALUES ($1, $2)', [auth.current_username, 1]);
+    const response = await request(app)
+    .post({
+      job_id: 1,
+      username: auth.current_username
+    }).send();
+  })
+})
 
 // describe('delete/users/username', function() {
 //   test('sucessfully delete own user', async function() {
