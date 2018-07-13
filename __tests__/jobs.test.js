@@ -1,7 +1,7 @@
 process.env.NODE_ENV = 'test';
 const db = require('../db');
 const request = require('supertest');
-const app = require('..');
+const app = require('../');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
@@ -57,7 +57,7 @@ beforeEach(async () => {
   auth.token = response.body.token;
   console.log('auth_token', auth.token);
   auth.current_username = jwt.verify(auth.token, 'SECRETKEY').username;
-
+  console.log();
   // do the same for company "companies"
   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
   await db.query(
@@ -76,7 +76,23 @@ beforeEach(async () => {
     auth.company_token,
     'SECRETKEY'
   ).handle;
-
+  //post job
+  await db.query(
+    "insert into jobs (title,salary,equity,company_handle) values ('QA','10000','12',$1)",
+    [auth.current_company_handle]
+  );
+  const job_data = await request(app)
+    .post('/jobs')
+    .send({
+      title: 'QA sen',
+      salary: '100000',
+      equity: 12,
+      company_handle: auth.current_company_handle
+    })
+    .set('authorization', auth.company_token);
+  auth.job_data_id = job_data.body[0].id;
+  console.log(auth.job_data_id, auth.current_username);
+});
 
 describe('GET /jobs', () => {
   test('gets a list of jobs', async () => {
@@ -99,52 +115,24 @@ describe('POST /jobs', () => {
         company_handle: 'testcompany'
       })
       .set('authorization', auth.company_token);
-    console.log('response-body', response.body);
+    //console.log('response-body', response.body);
     expect(response.status).toBe(200);
   });
 });
 
-describe('jobs/:id/apply', function(){
-  test('list usernames who have applied for this job(id)', async function(){
-    await db.query('INSERT INTO jobs_users (username, job_id) VALUES ($1, $2)', [auth.current_username, 1]);
+describe('POST /jobs/:id/applications', function() {
+  test('list usernames who have applied for this job(id)', async function() {
+    // await db.query(
+    //   'INSERT INTO jobs_users (username, job_id) VALUES ($1, $2)',
+    //   [auth.current_username, 1]
+    // );
     const response = await request(app)
-    .post({
-      job_id: 1,
-      username: auth.current_username
-    }).send();
-  })
-})
+      .post(`/jobs/${auth.job_data_id}/applications`)
 
-// describe('delete/users/username', function() {
-//   test('sucessfully delete own user', async function() {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_username}`)
-//       .set(`authorization`, auth.token);
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEquaqql({ message: 'unauthorized person' });
-//   });
-
-//   test('cannot delete another user', async function() {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_user_id + 1}`)
-//       .set(`authorization`, auth.token);
-//     expect(response.status).toBe(200);
-//   });
-// });
-
-// describe('patch/companies/:id', function() {
-//   test('sucessfully update own company', async function() {
-//     const response = await request(app)
-//       .patch(`/companies/${auth.current_user_id}`)
-//       .send({
-//         handle: 'testcompany',
-//         password: 'secret',
-//         name: 'hooli'
-//       })
-//       .set(`authorization`, auth.company_token);
-//     expect(response.status).toBe(200);
-//   });
-// });
+      .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+  });
+});
 
 afterEach(async () => {
   // delete the users and company users

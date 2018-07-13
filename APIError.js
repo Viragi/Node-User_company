@@ -21,8 +21,6 @@ class APIError extends Error {
   }
 }
 
-const testError = new APIError('401', 'Unauthorized', 'Must be logged in');
-
 // next(testError);
 // OR
 // next(new APIError('401', 'Unauthorized', 'Must be logged in');)

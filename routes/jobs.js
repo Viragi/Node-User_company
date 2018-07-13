@@ -104,7 +104,7 @@ router.post('/:id/applications', async function(req, res, next) {
   try {
     const token = req.headers.authorization;
     const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
-    console.log(decodedtoken);
+    //console.log(decodedtoken);
     if (decodedtoken === false) {
       return res.json({ message: 'user unauthorized' });
     }
