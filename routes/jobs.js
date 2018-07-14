@@ -120,14 +120,42 @@ router.get('/:id/applications', async function(req, res, next) {
     if (decodedtoken === false) {
       return res.json({ message: 'user unauthorized' });
     }
-    const jobData = await db.query(
-      'INSERT INTO jobs_users (job_id, username) VALUES ($1, $2) RETURNING *',
-      [req.params.id, decodedtoken.username]
-    );
-    console.log(jobData.rows);
-    return res.json(jobData.rows);
+    // const jobData = await db.query(
+    //   'INSERT INTO jobs_users (job_id, username) VALUES ($1, $2) RETURNING *',
+    //   [req.params.id, decodedtoken.username]
+    // );
+    // console.log(jobData.rows);
+    // return res.json(jobData.rows);
   } catch (err) {
     return next(err);
   }
 });
+
+router.get('/:id/applications/:application_id', async function(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
+    //console.log(decodedtoken);
+    if (decodedtoken.handle) {
+      const response = await db.query(
+        'select title from jobs where company_handle = $1 and id=$2',
+        [decodedtoken.handle, req.params.application_id]
+      );
+      return res.json(response.rows);
+    }
+    if (decodedtoken.username) {
+      const response = await db.query(
+        'select title from jobs join jobs_users on jobs_users.job_id = jobs.id where username = $1 and jobs_users.id=$2',
+        [decodedtoken.username, req.params.application_id]
+      );
+      return res.json(response.rows);
+    }
+    if (decodedtoken === false) {
+      return res.json({ message: 'user unauthorized' });
+    }
+  } catch (err) {
+    return next(err);
+  }
+});
+
 module.exports = router;
