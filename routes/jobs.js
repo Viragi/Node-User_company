@@ -79,27 +79,6 @@ router.delete('/:id', async function(req, res, next) {
   }
 });
 
-// router.post('/:id/apply', userauthentication, async function(req, res, next) {
-//   try {
-//     const jobData = await db.query(
-//       'SELECT user_id FROM jobs_users WHERE job_id=$1',
-//       [req.params.id]
-//     );
-//     const userIDS = jobData.rows.map(item => item.user_id);
-//     const userNames = userIDS.map(async val => {
-//       return await db.query('SELECT * FROM users WHERE id=$1', [val]).rows[0]
-//         .username;
-//       // console.log(names);
-//       // console.log(names.rows[0].username);
-//     });
-//     console.log(userNames);
-//     // console.log(jobData);
-//     return res.json(jobData.rows);
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
-
 router.post('/:id/applications', async function(req, res, next) {
   try {
     const token = req.headers.authorization;
@@ -119,4 +98,36 @@ router.post('/:id/applications', async function(req, res, next) {
   }
 });
 
+router.get('/:id/applications', async function(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    const decodedtoken = jsonwebtoken.verify(token, 'SECRETKEY');
+    //console.log(decodedtoken);
+    if (decodedtoken.handle) {
+      const response = await db.query(
+        'select title from jobs where company_handle = $1',
+        [decodedtoken.handle]
+      );
+      return res.json(response.rows);
+    }
+    if (decodedtoken.username) {
+      const response = await db.query(
+        'select title from jobs join jobs_users on jobs_users.job_id = jobs.id where username = $1',
+        [decodedtoken.username]
+      );
+      return res.json(response.rows);
+    }
+    if (decodedtoken === false) {
+      return res.json({ message: 'user unauthorized' });
+    }
+    const jobData = await db.query(
+      'INSERT INTO jobs_users (job_id, username) VALUES ($1, $2) RETURNING *',
+      [req.params.id, decodedtoken.username]
+    );
+    console.log(jobData.rows);
+    return res.json(jobData.rows);
+  } catch (err) {
+    return next(err);
+  }
+});
 module.exports = router;
